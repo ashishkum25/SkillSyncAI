@@ -7,38 +7,63 @@ const ai = new GoogleGenAI({
     apiKey: process.env.GOOGLE_GENAI_API_KEY
 })
 
-//Refer interviewReport.model.js for the schema of the interview report
+// ── Resource schema for each skill gap ─────────────────────────────────────────
+const resourceSchema = z.object({
+    title: z.string().describe("The title of the resource, e.g. 'System Design Interview – An Insider's Guide' or 'React Official Docs'"),
+    url: z.string().describe(
+        "A real, working URL for the resource. " +
+        "For YouTube use: https://www.youtube.com/results?search_query=<topic> " +
+        "For documentation use the actual official docs URL (e.g. https://reactjs.org/docs). " +
+        "For courses use the actual course URL."
+    ),
+    type: z.enum(["youtube", "documentation", "article", "course"]).describe("The type of the resource"),
+    description: z.string().describe("A one-sentence description of what the user will learn from this resource")
+})
+
+// ── Full interview report schema ───────────────────────────────────────────────
 const interviewReportSchema = z.object({
-    matchScore: z.number().describe("A score between 0 and 100 indicating how well the candidate's profile matches the job describe"),
+    matchScore: z.number().describe("A score between 0 and 100 indicating how well the candidate's profile matches the job description"),
     technicalQuestions: z.array(z.object({
-        question: z.string().describe("The technical question can be asked in the interview"),
-        intention: z.string().describe("The intention of interviewer behind asking this question"),
+        question: z.string().describe("The technical question that can be asked in the interview"),
+        intention: z.string().describe("The intention of the interviewer behind asking this question"),
         answer: z.string().describe("How to answer this question, what points to cover, what approach to take etc.")
     })).describe("Technical questions that can be asked in the interview along with their intention and how to answer them"),
     behavioralQuestions: z.array(z.object({
-        question: z.string().describe("The technical question can be asked in the interview"),
+        question: z.string().describe("The behavioral question that can be asked in the interview"),
         intention: z.string().describe("The intention of interviewer behind asking this question"),
         answer: z.string().describe("How to answer this question, what points to cover, what approach to take etc.")
     })).describe("Behavioral questions that can be asked in the interview along with their intention and how to answer them"),
     skillGaps: z.array(z.object({
         skill: z.string().describe("The skill which the candidate is lacking"),
-        severity: z.enum([ "low", "medium", "high" ]).describe("The severity of this skill gap, i.e. how important is this skill for the job and how much it can impact the candidate's chances")
-    })).describe("List of skill gaps in the candidate's profile along with their severity"),
+        severity: z.enum(["low", "medium", "high"]).describe("The severity of this skill gap — how important is this skill for the job"),
+        resources: z.array(resourceSchema).describe(
+            "2-4 curated learning resources for this skill gap. " +
+            "Include a mix: at least one YouTube search link and one official documentation or well-known article/course link. " +
+            "All URLs must be real and functional."
+        )
+    })).describe("List of skill gaps in the candidate's profile along with severity and curated learning resources"),
     preparationPlan: z.array(z.object({
         day: z.number().describe("The day number in the preparation plan, starting from 1"),
-        focus: z.string().describe("The main focus of this day in the preparation plan, e.g. data structures, system design, mock interviews etc."),
-        tasks: z.array(z.string()).describe("List of tasks to be done on this day to follow the preparation plan, e.g. read a specific book or article, solve a set of problems, watch a video etc.")
-    })).describe("A day-wise preparation plan for the candidate to follow in order to prepare for the interview effectively"),
+        focus: z.string().describe("The main focus of this day, e.g. data structures, system design, mock interviews etc."),
+        tasks: z.array(z.string()).describe("List of tasks to be done on this day")
+    })).describe("A day-wise preparation plan for the candidate to follow"),
     title: z.string().describe("The title of the job for which the interview report is generated"),
 })
 
 async function generateInterviewReport({ resume, selfDescription, jobDescription }) {
 
-
-    const prompt = `Generate an interview report for a candidate with the following details:
+    const prompt = `Generate a comprehensive interview report for a candidate with the following details:
                         Resume: ${resume}
                         Self Description: ${selfDescription}
                         Job Description: ${jobDescription}
+
+    IMPORTANT for skill gap resources:
+    - Provide 2-4 real, curated learning resources per skill gap.
+    - For YouTube resources, use the search URL format: https://www.youtube.com/results?search_query=<encoded+topic+name>
+    - For documentation, use the actual official documentation URL (e.g. https://docs.python.org, https://react.dev, https://kubernetes.io/docs)
+    - For articles, prefer well-known sources like MDN, freeCodeCamp, Baeldung, Medium, Dev.to
+    - For courses, use real platforms like Coursera, Udemy, or Pluralsight with real course links
+    - Mix resource types per skill gap for a balanced learning path
 `
 
     const response = await ai.models.generateContent({
@@ -51,8 +76,6 @@ async function generateInterviewReport({ resume, selfDescription, jobDescription
     })
 
     return JSON.parse(response.text)
-
-
 }
 
 
@@ -104,13 +127,10 @@ async function generateResumePdf({ resume, selfDescription, jobDescription }) {
         }
     })
 
-
     const jsonContent = JSON.parse(response.text)
-
     const pdfBuffer = await generatePdfFromHtml(jsonContent.html)
 
     return pdfBuffer
-
 }
 
 module.exports = { generateInterviewReport, generateResumePdf }
