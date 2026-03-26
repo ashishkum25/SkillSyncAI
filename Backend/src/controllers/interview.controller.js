@@ -1,4 +1,3 @@
-const pdfParse = require("pdf-parse")
 const { generateInterviewReport, generateResumePdf } = require("../services/ai.service")
 const interviewReportModel = require("../models/interviewReport.model")
 
@@ -15,6 +14,8 @@ async function generateInterViewReportController(req, res) {
         // Resume is optional: parse it only when a file was uploaded
         let resumeText = ""
         if (req.file && req.file.buffer) {
+            // Dynamic require avoids pdf-parse's test-PDF loader running at startup (causes crash on Render)
+            const pdfParse = require("pdf-parse")
             const parsed = await pdfParse(req.file.buffer)
             resumeText = parsed.text
         }
