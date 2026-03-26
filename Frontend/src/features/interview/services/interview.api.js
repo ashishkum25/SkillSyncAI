@@ -5,11 +5,25 @@ const api = axios.create({
     withCredentials: true,
 })
 
-// Intercept responses to throw proper Error objects with backend messages
+// Intercept responses to throw proper Error objects with backend messages.
+// When responseType is "blob", error bodies are also Blobs — we must parse
+// them as text/JSON to extract the real backend message.
 api.interceptors.response.use(
     (response) => response,
-    (error) => {
-        const message = error.response?.data?.message || "Something went wrong. Please try again."
+    async (error) => {
+        const data = error.response?.data
+
+        if (data instanceof Blob && data.type === "application/json") {
+            try {
+                const text = await data.text()
+                const json = JSON.parse(text)
+                return Promise.reject(new Error(json.message || "Something went wrong. Please try again."))
+            } catch {
+                return Promise.reject(new Error("Something went wrong. Please try again."))
+            }
+        }
+
+        const message = data?.message || "Something went wrong. Please try again."
         return Promise.reject(new Error(message))
     }
 )
