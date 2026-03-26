@@ -15,7 +15,9 @@ async function generateInterViewReportController(req, res) {
         let resumeText = ""
         if (req.file && req.file.buffer) {
             // Dynamic require avoids pdf-parse's test-PDF loader running at startup (causes crash on Render)
-            const pdfParse = require("pdf-parse")
+            // pdf-parse v2.x uses ESM-style default export, so unwrap it if needed
+            const pdfParseModule = require("pdf-parse")
+            const pdfParse = pdfParseModule.default || pdfParseModule
             const parsed = await pdfParse(req.file.buffer)
             resumeText = parsed.text
         }

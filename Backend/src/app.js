@@ -4,10 +4,16 @@ const cors = require("cors")
 
 const app = express()
 
+// Render (and most cloud providers) sit behind a reverse proxy — trust it so
+// express-rate-limit can read the real client IP from X-Forwarded-For
+app.set('trust proxy', 1)
+
 app.use(express.json())
 app.use(cookieParser())
+
 const allowedOrigins = [
     process.env.FRONTEND_URL ? process.env.FRONTEND_URL.replace(/\/$/, '') : null,
+    "https://skillsyncai-zeta.vercel.app",   // hardcoded fallback in case env var is missing
     "http://localhost:5173"
 ].filter(Boolean);
 
