@@ -14,10 +14,8 @@ async function generateInterViewReportController(req, res) {
         // Resume is optional: parse it only when a file was uploaded
         let resumeText = ""
         if (req.file && req.file.buffer) {
-            // Dynamic require avoids pdf-parse's test-PDF loader running at startup (causes crash on Render)
-            // pdf-parse v2.x uses ESM-style default export, so unwrap it if needed
-            const pdfParseModule = require("pdf-parse")
-            const pdfParse = pdfParseModule.default || pdfParseModule
+            // Dynamic require avoids pdf-parse's test-PDF loader running at startup
+            const pdfParse = require("pdf-parse")  // v1.x exports the function directly
             const parsed = await pdfParse(req.file.buffer)
             resumeText = parsed.text
         }
