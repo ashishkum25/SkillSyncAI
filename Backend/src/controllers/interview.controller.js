@@ -15,7 +15,7 @@ async function generateInterViewReportController(req, res) {
         // Resume is optional: parse it only when a file was uploaded
         let resumeText = ""
         if (req.file && req.file.buffer) {
-            const parsed = await (new pdfParse.PDFParse(Uint8Array.from(req.file.buffer))).getText()
+            const parsed = await pdfParse(req.file.buffer)
             resumeText = parsed.text
         }
 
@@ -148,16 +148,6 @@ async function generateResumePdfController(req, res) {
 }
 
 
-module.exports = {
-    generateInterViewReportController,
-    getInterviewReportByIdController,
-    getAllInterviewReportsController,
-    deleteInterviewReportController,
-    generateResumePdfController,
-    toggleSkillGapCompletionController,
-    getDashboardController
-}
-
 /**
  * @description Toggle the completed status of a specific skill gap within a report.
  * Uses the subdocument _id to locate the exact skill gap.
@@ -236,4 +226,15 @@ async function getDashboardController(req, res) {
     } catch (err) {
         res.status(500).json({ message: "Server error. Please try again." })
     }
+}
+
+
+module.exports = {
+    generateInterViewReportController,
+    getInterviewReportByIdController,
+    getAllInterviewReportsController,
+    deleteInterviewReportController,
+    generateResumePdfController,
+    toggleSkillGapCompletionController,
+    getDashboardController
 }
