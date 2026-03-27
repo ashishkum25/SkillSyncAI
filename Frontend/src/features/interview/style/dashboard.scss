@@ -1,3 +1,4 @@
+@use 'sass:color';
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 // ── Variables ────────────────────────────────────────────────────────────────
@@ -107,7 +108,7 @@ $font:         'Inter', system-ui, sans-serif;
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: linear-gradient(135deg, $accent, darken($accent, 15%));
+    background: linear-gradient(135deg, $accent, color.adjust($accent, $lightness: -15%));
     color: #fff;
     font-weight: 700;
     font-size: 1rem;
@@ -328,7 +329,7 @@ $font:         'Inter', system-ui, sans-serif;
     overflow: hidden;
     transition: border-color 0.2s;
 
-    &:hover { border-color: lighten($border, 8%); }
+    &:hover { border-color: color.adjust($border, $lightness: 8%); }
 
     &--done {
         opacity: 0.65;
@@ -450,7 +451,7 @@ $font:         'Inter', system-ui, sans-serif;
 
     &:hover {
         color: $text-primary;
-        border-color: lighten($border, 10%);
+        border-color: color.adjust($border, $lightness: 10%);
     }
 }
 
